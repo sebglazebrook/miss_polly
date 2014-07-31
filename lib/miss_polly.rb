@@ -5,13 +5,13 @@ require 'timeout'
 
 module MissPolly
 
-  def self.poll(time_limit: nil, wait_time: nil, max_retries: nil, success_test: nil, failure_test: nil, &block)
+  def self.poll(params = {}, &block)
     MissPolly::Poller.new do |p|
-      p.time_limit = time_limit
-      p.wait_time = wait_time
-      p.max_retries = max_retries
-      p.success_test = success_test
-      p.failure_test = failure_test
+      p.time_limit = params[:time_limit]
+      p.wait_time = params[:wait_time]
+      p.max_retries = params[:max_retries]
+      p.success_test = params[:success_test]
+      p.failure_test = params[:failure_test]
     end.poll(&block)
   end
 

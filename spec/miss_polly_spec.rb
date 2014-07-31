@@ -22,7 +22,7 @@ describe MissPolly do
 
       context 'when given a time limit in seconds' do
 
-        let(:time_limit) { 2.1 }
+        let(:time_limit) { 2.0 }
 
         it 'repeatedly executes the block until the time limit is up' do
           expect(some_class).to receive(:sleep).with(1).exactly(2).times

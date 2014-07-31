@@ -11,18 +11,7 @@ module MissPolly
 
     def poll(&block)
       start
-      if time_limit
-        begin
-          Timeout::timeout(time_limit) do
-            execute(&block) while good_to_go?
-          end
-        rescue Timeout::Error => e
-        end
-      elsif max_retries
-        execute(&block) while good_to_go?
-      else
-        @block_response = block.call
-      end
+      execute(&block) while good_to_go?
       block_response
     end
 
@@ -33,11 +22,11 @@ module MissPolly
     end
 
     def good_to_go?
-      attempts == 0 || !exceeded_attempts? && unsuccessful? && !failed? && !times_up?
+      attempts == 0 || !one_hit_wonder? && !exceeded_attempts? && unsuccessful? && !failed? && !times_up?
     end
 
     def execute(&block)
-      @block_response = block.call
+      Timeout::timeout(time_limit) { @block_response = block.call } rescue Timeout::Error
       @attempts += 1
       Waiter.wait(wait_time) if wait_time
     end
@@ -60,6 +49,10 @@ module MissPolly
 
     def times_up?
       cancel_time ? Time.now > cancel_time : false
+    end
+
+    def one_hit_wonder?
+      attempts == 1 && cancel_time.nil? && max_retries.nil?
     end
   end
 end

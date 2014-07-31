@@ -15,6 +15,10 @@ describe MissPolly do
       end
       let(:some_class) { SomeClass.new }
 
+      before do
+        allow(some_class).to receive(:sleep)
+      end
+
       it 'executes the block' do
         expect(some_class).to receive(:sleep).with(1).once
         subject.poll() { some_class.wait }
@@ -22,11 +26,11 @@ describe MissPolly do
 
       context 'when given a time limit in seconds' do
 
-        let(:time_limit) { 2.0 }
+        let(:time_limit) { 0.2 }
 
         it 'repeatedly executes the block until the time limit is up' do
           expect(some_class).to receive(:sleep).with(1).exactly(2).times
-          subject.poll(time_limit: time_limit) { sleep(1); some_class.wait }
+          subject.poll(time_limit: time_limit) { sleep(0.1); some_class.wait }
         end
 
         it 'doesn\'t allow the block to take more than the given time limit' do
@@ -36,7 +40,7 @@ describe MissPolly do
 
         context 'when given a wait time in seconds' do
 
-          let(:wait_time) { 0.5 }
+          let(:wait_time) { 0.1 }
           before do
             allow(MissPolly::Waiter).to receive(:wait)
           end
@@ -62,20 +66,20 @@ describe MissPolly do
 
         let(:success_test) do
           lambda do |response|
-            response > 5 ? response : false
+            response > 3 ? response : false
           end
         end
 
         it 'stops re-executing the block once the success test passes' do
           start = 1
-          expect(some_class).to receive(:sleep).exactly(5).times
+          expect(some_class).to receive(:sleep).exactly(3).times
           subject.poll(max_retries: 10, success_test: success_test) { some_class.wait ; start += 1 }
         end
 
         it 'returns the result of the successful execution' do
           start = 1
           result = subject.poll(max_retries: 10, success_test: success_test) { some_class.wait ; start += 1 }
-          expect(result).to eq 6
+          expect(result).to eq 4
         end
       end
 
@@ -83,20 +87,20 @@ describe MissPolly do
 
         let(:failure_test) do
           lambda do |response|
-            response > 5 ? response : false
+            response > 3 ? response : false
           end
         end
 
         it 'stops re-executing the block once the failure test passes' do
           start = 1
-          expect(some_class).to receive(:sleep).exactly(5).times
+          expect(some_class).to receive(:sleep).exactly(3).times
           subject.poll(max_retries: 10, failure_test: failure_test) { some_class.wait ; start += 1 }
         end
 
         it 'returns the result of the failed execution' do
           start = 1
           result = subject.poll(max_retries: 10, failure_test: failure_test) { some_class.wait ; start += 1 }
-          expect(result).to eq 6
+          expect(result).to eq 4
         end
       end
     end
